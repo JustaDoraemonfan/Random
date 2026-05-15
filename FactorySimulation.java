@@ -2,10 +2,23 @@ import java.util.Random;
 
 public class FactorySimulation {
 
-    static double generatePolishTime(Random rng) {
+    static Random rng = new Random();
+
+    static double uniformRandom(double min, double max) {
+        return min + rng.nextDouble() * (max - min);
+    }
+
+    static double normalRandom(double mean, double stddev) {
+        double u1 = rng.nextDouble();
+        double u2 = rng.nextDouble();
+        double z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+        return mean + stddev * z;
+    }
+
+    static double generatePolishTime() {
         double t;
         do {
-            t = 20 + 7 * rng.nextGaussian();
+            t = normalRandom(20, 7);
         } while (t < 5);
         return t;
     }
@@ -19,7 +32,6 @@ public class FactorySimulation {
     }
 
     static double simulate(int numMachines, int N) {
-        Random rng = new Random();
         double[] workerAvail = new double[10];
         double[] machineAvail = new double[numMachines];
         double totalWait = 0;
@@ -29,8 +41,8 @@ public class FactorySimulation {
             int w = argmin(workerAvail);
             double workerStart = workerAvail[w];
 
-            double assemblyTime = 100 + rng.nextDouble() * 200;
-            double polishTime = generatePolishTime(rng);
+            double assemblyTime = uniformRandom(100, 300);
+            double polishTime = generatePolishTime();
 
             double assemblyDone = workerStart + assemblyTime;
 
