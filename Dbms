@@ -1,0 +1,274 @@
+/* =========================================================
+   DAY 6 — Sub Queries + Correlated Subquery
+   ========================================================= */
+
+/* ---------- TABLE CREATION ---------- */
+
+CREATE TABLE departments (
+    department_id NUMBER PRIMARY KEY,
+    department_name VARCHAR2(50),
+    location_id NUMBER
+);
+
+CREATE TABLE employees (
+    employee_id NUMBER PRIMARY KEY,
+    first_name VARCHAR2(50),
+    last_name VARCHAR2(50),
+    salary NUMBER,
+    manager_id NUMBER,
+    department_id NUMBER,
+    job_id VARCHAR2(20),
+    hire_date DATE,
+
+    CONSTRAINT fk_dept
+    FOREIGN KEY (department_id)
+    REFERENCES departments(department_id)
+);
+
+CREATE TABLE job_grades (
+    grade_level VARCHAR2(5),
+    lowest_sal NUMBER,
+    highest_sal NUMBER
+);
+
+/* =========================================================
+   DAY 6
+   ========================================================= */
+
+/* 1 */
+SELECT employee_id, last_name
+FROM employees
+WHERE salary > (
+    SELECT AVG(salary)
+    FROM employees
+)
+ORDER BY salary ASC;
+
+/* 2a */
+SELECT employee_id, last_name
+FROM employees
+WHERE department_id IN (
+    SELECT department_id
+    FROM employees
+    WHERE last_name LIKE '%u%'
+);
+
+/* 2b */
+SELECT employee_id, last_name, salary
+FROM employees
+WHERE salary > (
+    SELECT AVG(salary)
+    FROM employees
+)
+AND department_id IN (
+    SELECT department_id
+    FROM employees
+    WHERE last_name LIKE '%u%'
+);
+
+/* 3 */
+SELECT first_name, department_id, job_id
+FROM employees
+WHERE department_id IN (
+    SELECT department_id
+    FROM departments
+    WHERE location_id = 1700
+);
+
+/* 4 */
+SELECT first_name, salary
+FROM employees
+WHERE manager_id = (
+    SELECT employee_id
+    FROM employees
+    WHERE last_name = 'King'
+);
+
+/* 5 */
+SELECT department_id, first_name, job_id
+FROM employees
+WHERE department_id = (
+    SELECT department_id
+    FROM departments
+    WHERE department_name = 'Executive'
+);
+
+/* 6 */
+SELECT last_name, salary
+FROM employees
+WHERE salary = (
+    SELECT DISTINCT salary
+    FROM employees
+    ORDER BY salary DESC
+    OFFSET 3 ROWS FETCH NEXT 1 ROW ONLY
+);
+
+/* =========================================================
+   DAY 6 — HOME ASSIGNMENT
+   ========================================================= */
+
+/* 1 */
+SELECT department_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id
+HAVING AVG(salary) = (
+    SELECT MIN(avg_sal)
+    FROM (
+        SELECT AVG(salary) AS avg_sal
+        FROM employees
+        GROUP BY department_id
+    )
+);
+
+/* 2 */
+SELECT last_name, salary
+FROM employees
+WHERE salary > ANY (
+    SELECT salary
+    FROM employees
+    WHERE department_id = 50
+);
+
+/* 3 */
+SELECT last_name, salary
+FROM employees
+WHERE salary > ALL (
+    SELECT salary
+    FROM employees
+    WHERE department_id = 50
+);
+
+/* =========================================================
+   DAY 7 — System and Object Privileges
+   ========================================================= */
+
+/* 1a */
+CREATE VIEW Emp_vu AS
+SELECT employee_id,
+       first_name || ' ' || last_name AS employee,
+       department_id
+FROM employees;
+
+/* 1b */
+SELECT * FROM Emp_vu;
+
+/* 2a */
+CREATE VIEW dept50 AS
+SELECT employee_id AS empno,
+       last_name AS employee,
+       department_id AS deptno
+FROM employees
+WHERE department_id = 50;
+
+/* 2b */
+DESC dept50;
+
+SELECT * FROM dept50;
+
+/* 2c */
+UPDATE employees
+SET department_id = 80
+WHERE last_name = 'Matos';
+
+/* 3 */
+CREATE VIEW Salary_vu AS
+SELECT e.last_name,
+       d.department_name,
+       e.salary,
+       j.grade_level
+FROM employees e
+JOIN departments d
+ON e.department_id = d.department_id
+JOIN job_grades j
+ON e.salary BETWEEN j.lowest_sal AND j.highest_sal;
+
+/* 4 */
+GRANT SELECT
+ON departments
+TO user_name;
+
+/* 5 */
+CREATE SYNONYM dept_syn
+FOR user_name.departments;
+
+/* 6 */
+SELECT * FROM dept_syn;
+
+/* =========================================================
+   DAY 7 — PRACTICE
+   ========================================================= */
+
+/* 1a */
+SELECT d.department_name,
+       COUNT(e.employee_id) AS no_of_employees,
+       AVG(e.salary) AS avg_salary
+FROM departments d
+JOIN employees e
+ON d.department_id = e.department_id
+GROUP BY d.department_name
+HAVING AVG(e.salary) >= 1000;
+
+/* 1b */
+ALTER TABLE employ
+ADD commission NUMBER
+CHECK (commission > 0);
+
+/* 2b */
+SELECT e.first_name AS employee_name,
+       e.hire_date AS employee_hire_date,
+       m.first_name AS manager_name,
+       m.hire_date AS manager_hire_date
+FROM employees e
+JOIN employees m
+ON e.manager_id = m.employee_id
+WHERE e.hire_date < m.hire_date;
+
+/* 2c */
+SELECT department_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id
+HAVING AVG(salary) = (
+    SELECT MIN(avg_sal)
+    FROM (
+        SELECT AVG(salary) AS avg_sal
+        FROM employees
+        GROUP BY department_id
+    )
+);
+
+/* =========================================================
+   4a
+   ========================================================= */
+
+CREATE TABLE Employees (
+    empid NUMBER PRIMARY KEY,
+    name VARCHAR2(50),
+    salary NUMBER,
+    address VARCHAR2(100),
+    hire_date DATE,
+    mgr_no NUMBER,
+    dept_name VARCHAR2(50),
+
+    CONSTRAINT fk_mgr
+    FOREIGN KEY (mgr_no)
+    REFERENCES Employees(empid)
+);
+
+/* 4b */
+SELECT name, salary
+FROM Employees
+WHERE salary > ALL (
+    SELECT salary
+    FROM Employees
+    WHERE dept_name = 'CSE'
+);
+
+/* 4c */
+SELECT name, salary
+FROM Employees
+WHERE salary = (
+    SELECT DISTINCT salary
+    FROM Employees
+    ORDER BY salary DESC
+    OFFSET 4 ROWS FETCH NEXT 1 ROW ONLY
+);
