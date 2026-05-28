@@ -1,0 +1,404 @@
+import java.util.*;
+public class Soldiers {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter N: ");
+        int n = sc.nextInt();
+        List<String> names = new ArrayList<>();
+        System.out.print("Enter Names ");
+        while(sc.hasNext()){
+            String s = sc.next();
+            if(s.equals("end")) break;
+            names.add(s);
+        }
+        int idx = 0;
+        while(names.size() > 1) {
+            idx = (idx + n - 1) % names.size();
+            System.out.println("Soldier Removed : " + names.get(idx));
+            names.remove(idx);
+            if(idx == names.size()) idx = 0;
+        }
+        System.out.println("Soldier Survived : " + names.get(0));
+    }
+}
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+class Person {
+    String name;
+    int n;
+
+    public Person(String name, int n) {
+        this.name = name;
+        this.n = n;
+    }
+}
+
+
+public class SoldierImproved {
+    static List<Person> names = new ArrayList<>();
+    static void read(Scanner sc) {
+        while(sc.hasNext()){
+            String s = sc.next();
+            if(s.equals("end")) break;
+            int no = sc.nextInt();
+            names.add(new Person(s, no));
+        }
+    }
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter Names and number : ");
+        read(sc);
+        System.out.print("Enter K : ");
+        int n = sc.nextInt();
+        int idx = 0;
+        while(names.size() > 1) {
+            idx = (idx + n - 1) % names.size();
+            Person removed = names.remove(idx);
+            System.out.println("Soldier Removed : " + removed.name);
+            n = removed.n;
+            if(idx == names.size()) idx = 0;
+        }
+        System.out.println("Soldier Survived : " + names.get(0).name);
+    }
+}
+
+import java.util.*;
+
+public class Tournament {
+
+    static ArrayList<Integer> data = new ArrayList<>();
+    static int[] tree;
+    static int base;
+
+    static void buildTree() {
+        int n = data.size();
+        base = 1;
+        while (base < n) base *= 2;
+
+        tree = new int[2 * base];
+        Arrays.fill(tree, Integer.MIN_VALUE);
+
+        for (int i = 0; i < n; i++) {
+            tree[base + i] = data.get(i);
+        }
+
+        for (int i = base - 1; i > 0; i--) {
+            tree[i] = Math.max(tree[2 * i], tree[2 * i + 1]);
+        }
+    }
+
+    static int deleteMax() {
+        int max = tree[1];
+
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i).equals(max)) {
+                data.set(i, Integer.MIN_VALUE);
+                break;
+            }
+        }
+
+        buildTree();
+        return max;
+    }
+
+    static void insert(int val) {
+        data.add(val);
+        buildTree();
+    }
+
+    static int[] sortTournament() {
+        ArrayList<Integer> backup = new ArrayList<>(data);
+
+        int n = data.size();
+        int[] sorted = new int[n];
+
+        buildTree();
+        for (int i = n - 1; i >= 0; i--) {
+            sorted[i] = deleteMax();
+        }
+
+        data = backup;
+        buildTree();
+
+        return sorted;
+    }
+
+    static void readInput(Scanner sc) {
+        while (sc.hasNext()) {
+            String s = sc.next();
+            if (s.equals("end")) break;
+            data.add(Integer.parseInt(s));
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter the numbers (end to stop): ");
+        readInput(sc);
+
+        if (data.isEmpty()) {
+            System.out.println("No numbers entered");
+            return;
+        }
+
+        buildTree();
+        System.out.println("Root (maximum) = " + tree[1]);
+
+        System.out.print("Insert a number (or type skip): ");
+        if (sc.hasNext()) {
+            String s = sc.next();
+            if (!s.equals("skip")) {
+                insert(Integer.parseInt(s));
+                System.out.println("Root (maximum) = " + tree[1]);
+            }
+        }
+
+        int[] sorted = sortTournament();
+        for (int i = 0; i < sorted.length; i++) {
+            System.out.print(sorted[i] + " ");
+        }
+        System.out.println();
+
+        sc.close();
+    }
+}
+
+import java.util.Scanner;
+
+public class Camping {
+
+    static final int GAP = 30;
+
+    static class Report {
+        String name;
+        int height;
+        int levels;
+
+        int totalCamps;
+        int baseCamps;
+
+        int havildars;
+        int subedars;
+        int captains;
+        int majors;
+
+        int totalPersonnel;
+    }
+
+    static int computeLevels(int height) {
+        return (height / GAP) + 1;
+    }
+
+    static int power(int b, int e) {
+        int ans = 1;
+
+        for (int i = 0; i < e; i++) {
+            ans *= b;
+        }
+
+        return ans;
+    }
+
+    static Report buildReport(String name, int height) {
+
+        Report r = new Report();
+
+        r.name = name;
+        r.height = height;
+
+        r.levels = computeLevels(height);
+
+        r.totalCamps = power(2, r.levels) - 1;
+
+        r.baseCamps = power(2, r.levels - 1);
+
+        r.havildars = r.totalCamps * 2;
+
+        r.subedars = r.totalCamps;
+
+        r.captains = r.totalCamps;
+
+        r.majors = r.levels;
+
+        r.totalPersonnel = (r.totalCamps * 4) + r.majors;
+
+        return r;
+    }
+
+    static void printLevelWise(Report r) {
+
+        System.out.println("\n" + r.name + " Camp Details");
+
+        for (int i = 0; i < r.levels; i++) {
+
+            int camps = power(2, i);
+
+            int altitude = r.height - (i * GAP);
+
+            System.out.println("\nLevel " + i);
+
+            System.out.println("Approx Height : " + altitude + " m");
+
+            System.out.println("No. of Camps : " + camps);
+
+            System.out.println("Havildars : " + (camps * 2));
+
+            System.out.println("Subedars : " + camps);
+
+            System.out.println("Captain/Lieutenant : " + camps);
+
+            System.out.println("Major : 1");
+
+            System.out.println("Total Personnel : " + ((camps * 4) + 1));
+        }
+    }
+
+    static void printReport(Report a, Report b) {
+
+        System.out.println("\n===== HEADQUARTER REPORT =====");
+
+        System.out.println("\n1) Total Camps");
+
+        System.out.println(a.name + " : " + a.totalCamps);
+
+        System.out.println(b.name + " : " + b.totalCamps);
+
+        System.out.println("\n2) Total Personnel");
+
+        System.out.println(a.name + " : " + a.totalPersonnel);
+
+        System.out.println(b.name + " : " + b.totalPersonnel);
+
+        System.out.println("\n3) Officer Count");
+
+        System.out.println(a.name + " -> Havildars : " + a.havildars +
+                ", Subedars : " + a.subedars +
+                ", Captains/Lt : " + a.captains +
+                ", Majors : " + a.majors);
+
+        System.out.println(b.name + " -> Havildars : " + b.havildars +
+                ", Subedars : " + b.subedars +
+                ", Captains/Lt : " + b.captains +
+                ", Majors : " + b.majors);
+
+        System.out.println("\n4) Base Camps for Food & Beverage");
+
+        System.out.println(a.name + " : " + a.baseCamps);
+
+        System.out.println(b.name + " : " + b.baseCamps);
+
+        System.out.println("\n5) Exact Subset Check");
+
+        if (a.levels < b.levels) {
+
+            System.out.println(a.name + " is exact subset of " + b.name);
+
+        } else if (b.levels < a.levels) {
+
+            System.out.println(b.name + " is exact subset of " + a.name);
+
+        } else {
+
+            System.out.println("Neither is exact subset of the other");
+        }
+    }
+
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter height of MP1 : ");
+
+        int h1 = sc.nextInt();
+
+        System.out.print("Enter height of MP2 : ");
+
+        int h2 = sc.nextInt();
+
+        Report mp1 = buildReport("MP1", h1);
+
+        Report mp2 = buildReport("MP2", h2);
+
+        printLevelWise(mp1);
+
+        printLevelWise(mp2);
+
+        printReport(mp1, mp2);
+
+        sc.close();
+    }
+}
+
+import java.util.*;
+
+public class Garage {
+    static class Car {
+        String plate;
+        int moves;
+
+        public Car(String plate) {
+            this.plate = plate;
+            this.moves = 0;
+        }
+    }
+    static final int capacity = 10;
+    static Stack<Car> garage = new Stack<>();
+    static boolean isContains(String plate) {
+        for(Car c : garage) {
+            if(c.plate.equals(plate)) return true;
+        }
+        return false;
+    }
+    static void Arrival(String plate) {
+        if(isContains(plate)) {
+            System.out.println("Car Already in Garage !");
+            return;
+        }
+        if(garage.size() == capacity) {
+            System.out.println("Garage Full!");
+            return;
+        }
+        garage.push(new Car(plate));
+        System.out.println("Car Parked " + plate);
+    }
+    static void Departure(String plate) {
+        if(!isContains(plate)) {
+            System.out.println("Car Not in Garage !");
+            return;
+        }
+        if(garage.isEmpty()) {
+            System.out.println("Garage Empty!");
+            return;
+        }
+        Stack<Car> temp = new Stack<>();
+        while(!garage.peek().plate.equals(plate)) {
+            Car out = garage.pop();
+            out.moves += 1;
+            temp.push(out);
+        }
+        Car depart = garage.pop();
+        System.out.println("Car departed " + depart.plate + "\nMoved " + depart.moves);
+        while(!temp.isEmpty()) {
+            garage.push(temp.pop());
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter Action Plate");
+        while(sc.hasNext()) {
+            System.out.println("Enter Action Plate");
+            String action = sc.next();
+            if(action.equals("exit")) break;
+            String plate = sc.next();
+            if(action.equals("A")) Arrival(plate);
+            else if(action.equals("D")) Departure(plate);
+            else System.out.print("INVALID");
+        }
+    }
+}
